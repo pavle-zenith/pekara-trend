@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porudžbine</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <h1>Porudžbine</h1>
+            <button id="view-history" class="btn">Istorija Porudžbina</button>
+        </div>
+        
+        <div id="orders"></div>
+    </div>
+
+    <div id="history-popup" class="popup">
+        <div class="popup-content">
+            <span class="close-button">&times;</span>
+            <h2>Istorija Porudžbina</h2>
+            <div id="order-history"></div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Pekara Trend | Softver izradio <a href="https://thezenithdigital.com">Zenith Digital</a></p>
+    </footer>
+    <script src="orders.js"></script>
+</body>
+</html>

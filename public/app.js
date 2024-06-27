@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => console.error('Error:', error));
     });
 
-    const socket = new WebSocket('ws://localhost:3000');
+    const socket = new WebSocket('ws://3.79.246.219:3000');
     socket.onmessage = (event) => {
         const newOrder = JSON.parse(event.data);
         console.log('New order received:', newOrder);
@@ -57,7 +57,10 @@ function fetchProducts() {
     fetch('/products')
         .then(response => response.json())
         .then(data => {
-            products = data;
+            products = data.map(product => {
+                product.price = parseFloat(product.price);
+		return product;
+            });
             displayProducts();
         })
         .catch(error => console.error('Error:', error));

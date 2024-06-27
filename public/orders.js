@@ -3,7 +3,7 @@ const historyPopup = document.getElementById('history-popup');
 const orderHistoryContainer = document.getElementById('order-history');
 const viewHistoryButton = document.getElementById('view-history');
 const closeButton = document.querySelector('.close-button');
-const socket = new WebSocket('ws://'+process.env.SERVER_DOMAIN_NAME+':'+process.env.SERVER_PORT);
+const socket = new WebSocket('ws://localhost:3000');
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchNewOrders();

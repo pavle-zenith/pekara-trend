@@ -1,5 +1,5 @@
 const express = require('express');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const path = require('path');
@@ -42,6 +42,7 @@ app.get('/products', (req, res) => {
     const query = 'SELECT * FROM products';
     db.query(query, (err, results) => {
         if (err) {
+            console.log(err);
             res.status(500).send('Error fetching products');
         } else {
             res.status(200).json(results);

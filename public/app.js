@@ -58,11 +58,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const socket = new WebSocket('ws://localhost:3000');
-    
 
     socket.addEventListener("message", (event) => {
         const newOrder = JSON.parse(event.data);
         console.log('New order received:', newOrder);
+        if(newOrder.notification){
+            addNotification(newOrder.id, newOrder.items);
+        }
       });
 
     viewNotificationsButton.addEventListener('click', () => {

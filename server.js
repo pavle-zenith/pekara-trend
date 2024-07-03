@@ -109,14 +109,27 @@ app.get('/new-orders', (req, res) => {
 // Endpoint to mark an order as complete
 app.post('/complete-order', (req, res) => {
     const { orderId } = req.body;
+    console.log('Order completed:', orderId);
     const query = 'UPDATE orders SET status = "complete" WHERE id = ?';
     db.query(query, [orderId], (err, result) => {
         if (err) {
             res.status(500).send('Error completing order');
         } else {
             res.status(200).send('Order completed');
+            const selectOrderQuery = 'SELECT * FROM orders WHERE id ='+orderId.toString();
+            db.query(selectOrderQuery, (err, result) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    const order = result[0];
+                    order.notification = true;
+                    broadcastOrder(order);
+                }
+            });
+            console.log('Order completed:', orderId);
         }
     });
+
 });
 
 // WebSocket server setup

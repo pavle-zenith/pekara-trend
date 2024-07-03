@@ -1,5 +1,16 @@
+
+
 let products = [];
 let order = [];
+
+const notificationCounter = document.getElementById('notification-counter');
+const notificationsList = document.getElementById('notifications-list');
+const viewNotificationsButton = document.getElementById('view-notifications');
+const notificationsPopup = document.getElementById('notifications-popup');
+const closeButtonNotifications = notificationsPopup.querySelector('.close-button');
+
+let notificationCount = 0;
+const notifications = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchProducts();
@@ -46,11 +57,31 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => console.error('Error:', error));
     });
 
-    const socket = new WebSocket('ws://3.79.246.219:3000');
-    socket.onmessage = (event) => {
+    const socket = new WebSocket('ws://localhost:3000');
+    
+
+    socket.addEventListener("message", (event) => {
         const newOrder = JSON.parse(event.data);
         console.log('New order received:', newOrder);
-    };
+      });
+
+    viewNotificationsButton.addEventListener('click', () => {
+        notificationsPopup.style.display = 'flex';
+        notificationCount = 0;
+        updateNotificationCounter();
+    });
+
+    closeButtonNotifications.addEventListener('click', () => {
+        notificationsPopup.style.display = 'none';
+        notificationsList.innerHTML = ''; 
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target === notificationsPopup) {
+            notificationsPopup.style.display = 'none';
+            notificationsList.innerHTML = ''; 
+        }
+    });
 });
 
 function fetchProducts() {
@@ -59,7 +90,7 @@ function fetchProducts() {
         .then(data => {
             products = data.map(product => {
                 product.price = parseFloat(product.price);
-		return product;
+                return product;
             });
             displayProducts();
         })
@@ -68,7 +99,7 @@ function fetchProducts() {
 
 function displayProducts() {
     const productsContainer = document.getElementById('products');
-    productsContainer.innerHTML = ''; // Clear existing products
+    productsContainer.innerHTML = ''; 
     products.forEach(product => {
         addProductToPage(product);
     });
@@ -128,15 +159,75 @@ function sendOrder() {
     };
     console.log('Sending order:', orderData);
 
-    // Send orderData to the server (using fetch, AJAX, etc.)
-    fetch('/submit-order', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(orderData)
-    })
-    .then(response => response.text())
-    .then(data => console.log(data))
-    .catch(error => console.error('Error:', error));
+    Swal.fire({
+        title: 'Da li ste sigurni?',
+        text: "Da li želite da pošaljete porudžbinu?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Da, pošalji!',
+        cancelButtonText: 'Ne, otkaži'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/submit-order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log(data);
+                Swal.fire(
+                    'Porudžbina poslata!',
+                    'Vaša porudžbina je uspešno poslata.',
+                    'success'
+                );
+                deleteOrder();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire(
+                    'Greška!',
+                    'Došlo je do greške prilikom slanja porudžbine.',
+                    'error'
+                );
+            });
+        }
+    });
+}
+
+function addNotification(orderId, orderItems) {
+    notificationCount++;
+    updateNotificationCounter();
+
+    const notification = {
+        id: orderId,
+        items: JSON.parse(orderItems)
+    };
+    notifications.push(notification);
+    displayNotification(notification);
+}
+
+function updateNotificationCounter() {
+    notificationCounter.textContent = notificationCount;
+}
+
+function displayNotification(notification) {
+    const notificationItem = document.createElement('div');
+    notificationItem.className = 'notification-item';
+    notificationItem.innerHTML = `
+        <p>Porudžbina ${notification.id} je spremna</p>
+        <ul>${formatOrderItems(JSON.stringify(notification.items))}</ul>
+    `;
+    notificationsList.appendChild(notificationItem);
+}
+
+function formatOrderItems(itemsJson) {
+    const items = JSON.parse(itemsJson);
+    return items.map(item => `
+        <li><strong>${item.name}</strong> - ${item.quantity} x ${item.price.toFixed(2)}KM</li>
+    `).join('');
 }

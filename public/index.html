@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pekara Trend</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <div style="margin-bottom: 50px;" class="container">
@@ -12,12 +13,15 @@
             <div class="row">
                 <h1>Proizvodi</h1>
                 <button id="open-popup" class="btn">Unesi Proizvod</button>
+                <button id="view-notifications" class="btn">
+                    <i class="bell-icon">🔔</i>
+                    <span id="notification-counter" class="notification-counter">0</span>
+                </button>
             </div>
             
             <div id="products"></div>
-            
         </div>
-        <div class="sidebar">
+        <div style="margin-bottom: 50px;" class="sidebar">
             <div class="row flex">
                 <h2>Pregled porudžbine</h2>
                 <button onclick="deleteOrder()" class="btn red">Obriši Porudžbinu</button>
@@ -50,9 +54,19 @@
             </form>
         </div>
     </div>
+
+    <div id="notifications-popup" class="popup">
+        <div class="popup-content">
+            <span class="close-button">&times;</span>
+            <h2>Notifikacije</h2>
+            <div id="notifications-list"></div>
+        </div>
+    </div>
+
     <footer>
         <p>&copy; 2024 Pekara Trend | Softver izradio <a href="https://thezenithdigital.com">Zenith Digital</a></p>
     </footer>
+    
     <script src="app.js"></script>
 </body>
 </html>

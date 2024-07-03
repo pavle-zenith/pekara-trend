@@ -2,8 +2,9 @@ const ordersContainer = document.getElementById('orders');
 const historyPopup = document.getElementById('history-popup');
 const orderHistoryContainer = document.getElementById('order-history');
 const viewHistoryButton = document.getElementById('view-history');
-const closeButton = document.querySelector('.close-button');
-const socket = new WebSocket('ws://3.79.246.219:3000');
+const closeButtonHistory = historyPopup.querySelector('.close-button');
+
+const socket = new WebSocket('ws://localhost:3000');
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchNewOrders();
@@ -18,12 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchOrderHistory();
     });
 
-    closeButton.addEventListener('click', () => {
+    closeButtonHistory.addEventListener('click', () => {
         historyPopup.style.display = 'none';
     });
 
     window.addEventListener('click', (event) => {
-        if (event.target == historyPopup) {
+        if (event.target === historyPopup) {
             historyPopup.style.display = 'none';
         }
     });
@@ -39,7 +40,7 @@ function fetchNewOrders() {
 }
 
 function displayOrders(orders) {
-    ordersContainer.innerHTML = ''; // Clear existing orders
+    ordersContainer.innerHTML = ''; 
 
     orders.forEach(order => {
         addOrderToPage(order);
@@ -49,29 +50,58 @@ function displayOrders(orders) {
 function addOrderToPage(order) {
     const orderDiv = document.createElement('div');
     orderDiv.className = 'order';
+    const orderItemsStr = JSON.stringify(order.items);
     orderDiv.innerHTML = `
         <p>Broj Porudžbine: ${order.id}</p>
         <h2>Sadržaj:</h2>
         <ul>${formatOrderItems(order.items)}</ul>
-        <button style="margin-top:15px;" onclick="completeOrder(${order.id})">Porudžbina je spremna</button>
+        <button style="margin-top:15px;" onclick='completeOrder(${order.id}, ${JSON.stringify(orderItemsStr)})'>Porudžbina je spremna</button>
     `;
     ordersContainer.appendChild(orderDiv);
 }
 
-function completeOrder(orderId) {
-    fetch('/complete-order', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ orderId })
-    })
-    .then(response => response.text())
-    .then(data => {
-        console.log(data);
-        fetchNewOrders(); // Refresh the orders list
-    })
-    .catch(error => console.error('Error:', error));
+function completeOrder(orderId, orderItems) {
+    Swal.fire({
+        title: 'Da li ste sigurni?',
+        text: "Da li želite da potvrdite ovu porudžbinu kao spremnu?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Da, potvrdite!',
+        cancelButtonText: 'Ne, otkaži'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/complete-order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ orderId })
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log(data);
+                fetchNewOrders(); 
+                Swal.fire(
+                    'Porudžbina potvrđena!',
+                    'Porudžbina je uspešno potvrđena kao spremna.',
+                    'success'
+                );
+
+                socket.send(JSON.stringify({ orderId, orderItems }));
+                console.log("poslat order");
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire(
+                    'Greška!',
+                    'Došlo je do greške prilikom potvrđivanja porudžbine.',
+                    'error'
+                );
+            });
+        }
+    });
 }
 
 function fetchOrderHistory() {
@@ -84,13 +114,12 @@ function fetchOrderHistory() {
 }
 
 function displayOrderHistory(orders) {
-    orderHistoryContainer.innerHTML = ''; // Clear existing order history
+    orderHistoryContainer.innerHTML = '';
 
     orders.forEach(order => {
-        if(order.status==='complete') {
+        if(order.status === 'complete') {
             order.status = 'Završeno';
-        }
-        else if (order.status==='new') {
+        } else if (order.status === 'new') {
             order.status = 'Nova porudžbina';
         }
         const orderDiv = document.createElement('div');

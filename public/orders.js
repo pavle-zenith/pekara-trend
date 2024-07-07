@@ -4,7 +4,7 @@ const orderHistoryContainer = document.getElementById('order-history');
 const viewHistoryButton = document.getElementById('view-history');
 const closeButtonHistory = historyPopup.querySelector('.close-button');
 
-const socket = new WebSocket('ws://localhost:3000');
+const socket = new WebSocket('ws://18.195.213.62:80');
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchNewOrders();
@@ -141,3 +141,4 @@ function formatOrderItems(itemsJson) {
         <li><strong>${item.name}</strong> - ${item.quantity} x ${item.price.toFixed(2)}KM</li>
     `).join('');
 }
+

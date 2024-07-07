@@ -134,7 +134,7 @@ app.post('/complete-order', (req, res) => {
 
 // WebSocket server setup
 const wss = new WebSocket.Server({ server: app.listen(process.env.PORT, () => {
-    console.log('Server running on port 3000');
+    console.log('Server running on port 80');
 }) });
 
 wss.on('connection', ws => {

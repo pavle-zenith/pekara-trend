@@ -7,69 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body>
-    <div style="margin-bottom: 50px;" class="container">
-        <div class="main-content">
-            <div class="row">
-                <h1>Proizvodi</h1>
-                <div style="display: flex; gap:20px;">
-                    <button id="open-popup" class="btn">Unesi Proizvod</button>
-                <button id="view-notifications" class="btn">
-                    <i class="bell-icon">🔔</i>
-                    <span id="notification-counter" class="notification-counter">0</span>
-                </button>
-                </div>
-                
-            </div>
-            
-            <div id="products"></div>
-        </div>
-        <div style="margin-bottom: 50px;" class="sidebar">
-            <div class="row flex">
-                <h2>Pregled porudžbine</h2>
-                <button onclick="deleteOrder()" class="btn red">Obriši Porudžbinu</button>
-            </div>
-            
-            <ul id="order-summary"></ul>
-            <p>Ukupna cena:<span id="total-price">0.00</span> KM</p>
-            <button onclick="sendOrder()" style="width:100%; margin-top: 20px;" class="btn">Pošalji porudžbinu</button>
-        </div>
-    </div>
-
-    <div id="popup" class="popup">
-        <div class="popup-content">
-            <span class="close-button">&times;</span>
-            <h2>Unesi Nov Proizvod</h2>
-            <form id="product-form" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="product-name">Naziv:</label>
-                    <input type="text" id="product-name" name="product-name" required>
-                </div>
-                <div class="form-group">
-                    <label for="product-image">Slika:</label>
-                    <input type="file" id="product-image" name="product-image" accept="image/*" required>
-                </div>
-                <div class="form-group">
-                    <label for="product-price">Cena:</label>
-                    <input type="number" id="product-price" name="product-price" required>
-                </div>
-                <button type="submit" class="btn">Unesi proizvod</button>
-            </form>
-        </div>
-    </div>
-
-    <div id="notifications-popup" class="popup">
-        <div class="popup-content">
-            <span class="close-button">&times;</span>
-            <h2>Notifikacije</h2>
-            <div id="notifications-list"></div>
-        </div>
-    </div>
-
-    <footer>
-        <p>&copy; 2024 Pekara Trend | Softver izradio <a href="https://belgrand.net/en/">BELGRAND</a></p>
-    </footer>
-    
-    <script src="app.js"></script>
+<body style="display:flex;justify-content: center;align-items: center;min-height: 100vh;max-height: 100vh;">
+    <h1>Pekoteka Trend</h1> 
 </body>
 </html>

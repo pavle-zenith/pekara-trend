@@ -4,7 +4,7 @@ const orderHistoryContainer = document.getElementById('order-history');
 const viewHistoryButton = document.getElementById('view-history');
 const closeButtonHistory = historyPopup.querySelector('.close-button');
 
-const socket = new WebSocket('ws://18.195.213.62:80');
+const socket = new WebSocket('ws://35.159.161.213:80');
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchNewOrders();

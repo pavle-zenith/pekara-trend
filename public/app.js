@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => console.error('Error:', error));
     });
 
-    const socket = new WebSocket('ws://35.159.161.213:80');
+    const socket = new WebSocket('ws://35.159.161.213:3000');
 
     socket.addEventListener("message", (event) => {
         const newOrder = JSON.parse(event.data);

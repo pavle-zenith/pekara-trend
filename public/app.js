@@ -1,5 +1,3 @@
-
-
 let products = [];
 let order = [];
 
@@ -57,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => console.error('Error:', error));
     });
 
-    const socket = new WebSocket('ws://35.159.161.213:80');
+    const socket = new WebSocket('ws://157.90.253.184:80');
 
     socket.addEventListener("message", (event) => {
         const newOrder = JSON.parse(event.data);
@@ -65,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(newOrder.notification){
             addNotification(newOrder.id, newOrder.items);
         }
-      });
+    });
 
     viewNotificationsButton.addEventListener('click', () => {
         notificationsPopup.style.display = 'flex';
@@ -112,16 +110,26 @@ function addProductToPage(product) {
     const productDiv = document.createElement('div');
     productDiv.className = 'product';
     productDiv.innerHTML = `
-        <div class="card" onclick="addToOrder(${product.id})">
-        <img src="${product.image}" alt="${product.name}">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3>${product.name}</h3>
-            <p>${product.price.toFixed(2)}KM</p>
-        </div>
-        
+        <div class="card">
+            <img src="${product.image}" alt="${product.name}">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3>${product.name}</h3>
+                <p>${product.price.toFixed(2)}KM</p>
+            </div>
+            <button class="btn delete-product" style="width:150px; float:right;" onclick="deleteProduct(${product.id})">Obriši</button>
         </div>
     `;
     productsContainer.appendChild(productDiv);
+}
+
+function deleteProduct(productId) {
+    products = products.filter(product => product.id !== productId);
+    displayProducts();
+    Swal.fire({
+        title: 'Proizvod obrisan!',
+        icon: 'success',
+        confirmButtonText: 'U redu'
+    });
 }
 
 function addToOrder(productId) {

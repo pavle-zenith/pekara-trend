@@ -19,7 +19,7 @@ body {
 
 .container {
     width: 90%;
-    max-width: 800px;
+    max-width: 1600px;
     margin: 20px auto;
     padding: 20px;
     background: #fff;
@@ -136,7 +136,7 @@ h1 {
     gap: 10px;
 }
 .product {
-    width:calc(50% - 40px);
+    width:calc(25% - 40px);
 }
 .product img {
     width: 100%;
@@ -150,6 +150,19 @@ h1 {
     padding: 20px;
     border-left: 1px solid #ccc;
     border-radius: 10px;
+    display:flex;
+    justify-content: space-between;
+}
+.order-right {
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    gap:20px;
+}
+
+.order-right button {
+    width:100%;
+    height:100%;
 }
 
 .sidebar h2 {

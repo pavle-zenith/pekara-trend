@@ -38,49 +38,49 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Endpoint to fetch all products
-app.get('/products', (req, res) => {
+app.get('/products', (req, res, next) => {
     const query = 'SELECT * FROM products';
     db.query(query, (err, results) => {
         if (err) {
             console.log(err);
-            res.status(500).send('Error fetching products');
+            return next(err);
         } else {
             res.status(200).json(results);
         }
     });
 });
 
-app.post('/add-product', upload.single('product-image'), (req, res) => {
+app.post('/add-product', upload.single('product-image'), (req, res, next) => {
     const { 'product-name': name, 'product-price': price } = req.body;
     const image = '/images/' + req.file.filename;
 
     const query = 'INSERT INTO products (name, image, price) VALUES (?, ?, ?)';
     db.query(query, [name, image, price], (err, result) => {
         if (err) {
-            res.status(500).send('Error saving product');
+            return next(err);
         } else {
             res.status(200).json({ id: result.insertId, name, image, price });
         }
     });
 });
 
-app.get('/order-history', (req, res) => {
+app.get('/order-history', (req, res, next) => {
     const query = 'SELECT * FROM orders';
     db.query(query, (err, results) => {
         if (err) {
-            res.status(500).send('Error fetching order history');
+            return next(err);
         } else {
             res.status(200).json(results);
         }
     });
 });
 
-app.post('/submit-order', (req, res) => {
+app.post('/submit-order', (req, res, next) => {
     const orderData = req.body;
     const query = 'INSERT INTO orders (items, status) VALUES (?, "new")';
     db.query(query, [orderData.items], (err, result) => {
         if (err) {
-            res.status(500).send('Error saving order');
+            return next(err);
         } else {
             const newOrder = {
                 id: result.insertId,
@@ -95,11 +95,11 @@ app.post('/submit-order', (req, res) => {
 });
 
 // Endpoint to fetch new orders
-app.get('/new-orders', (req, res) => {
+app.get('/new-orders', (req, res, next) => {
     const query = 'SELECT * FROM orders WHERE status = "new"';
     db.query(query, (err, results) => {
         if (err) {
-            res.status(500).send('Error fetching new orders');
+            return next(err);
         } else {
             res.status(200).json(results);
         }
@@ -107,17 +107,17 @@ app.get('/new-orders', (req, res) => {
 });
 
 // Endpoint to mark an order as complete
-app.post('/complete-order', (req, res) => {
+app.post('/complete-order', (req, res, next) => {
     const { orderId } = req.body;
     console.log('Order completed:', orderId);
     const query = 'UPDATE orders SET status = "complete" WHERE id = ?';
     db.query(query, [orderId], (err, result) => {
         if (err) {
-            res.status(500).send('Error completing order');
+            return next(err);
         } else {
             res.status(200).send('Order completed');
-            const selectOrderQuery = 'SELECT * FROM orders WHERE id ='+orderId.toString();
-            db.query(selectOrderQuery, (err, result) => {
+            const selectOrderQuery = 'SELECT * FROM orders WHERE id = ?';
+            db.query(selectOrderQuery, [orderId], (err, result) => {
                 if (err) {
                     console.log(err);
                 } else {
@@ -129,7 +129,6 @@ app.post('/complete-order', (req, res) => {
             console.log('Order completed:', orderId);
         }
     });
-
 });
 
 // WebSocket server setup
@@ -149,3 +148,22 @@ function broadcastOrder(order) {
         }
     });
 }
+
+// Global error handler
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
+});
+
+// Unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // Application specific logging, throwing an error, or other logic here
+});
+
+// Uncaught exceptions
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+    // Perform any necessary cleanup and shutdown the application safely
+    process.exit(1); // Optional: exit the process
+});

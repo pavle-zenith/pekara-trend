@@ -39,7 +39,12 @@ document.addEventListener('DOMContentLoaded', () => {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             const newProduct = {
                 id: data.id,
@@ -57,11 +62,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const socket = new WebSocket('ws://157.90.253.184:80');
 
-    socket.addEventListener("message", (event) => {
-        const newOrder = JSON.parse(event.data);
-        console.log('New order received:', newOrder);
-        if(newOrder.notification){
-            addNotification(newOrder.id, newOrder.items);
+    socket.addEventListener('message', (event) => {
+        try {
+            const newOrder = JSON.parse(event.data);
+            console.log('New order received:', newOrder);
+            if(newOrder.notification){
+                addNotification(newOrder.id, newOrder.items);
+            }
+        } catch (error) {
+            console.error('Error processing WebSocket message:', error);
+        }
+    });
+
+    socket.addEventListener('error', (error) => {
+        console.error('WebSocket error:', error);
+    });
+
+    socket.addEventListener('close', (event) => {
+        if (event.wasClean) {
+            console.log(`WebSocket connection closed cleanly, code=${event.code}, reason=${event.reason}`);
+        } else {
+            console.error('WebSocket connection died');
         }
     });
 
@@ -86,7 +107,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function fetchProducts() {
     fetch('/products')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             products = data.map(product => {
                 product.price = parseFloat(product.price);
@@ -94,7 +120,7 @@ function fetchProducts() {
             });
             displayProducts();
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => console.error('Error fetching products:', error));
 }
 
 function displayProducts() {
@@ -106,138 +132,184 @@ function displayProducts() {
 }
 
 function addProductToPage(product) {
-    const productsContainer = document.getElementById('products');
-    const productDiv = document.createElement('div');
-    productDiv.className = 'product';
-    productDiv.innerHTML = `
-        <div class="card">
-            <img src="${product.image}" alt="${product.name}">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3>${product.name}</h3>
-                <p>${product.price.toFixed(2)}KM</p>
+    try {
+        const productsContainer = document.getElementById('products');
+        const productDiv = document.createElement('div');
+        productDiv.className = 'product';
+        productDiv.innerHTML = `
+            <div class="card">
+                <img src="${product.image}" alt="${product.name}">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3>${product.name}</h3>
+                    <p>${product.price.toFixed(2)}KM</p>
+                </div>
+                <button class="btn delete-product" style="width:150px; float:right;" onclick="deleteProduct(${product.id})">Obriši</button>
             </div>
-            <button class="btn delete-product" style="width:150px; float:right;" onclick="deleteProduct(${product.id})">Obriši</button>
-        </div>
-    `;
-    productsContainer.appendChild(productDiv);
+        `;
+        productsContainer.appendChild(productDiv);
+    } catch (error) {
+        console.error('Error adding product to page:', error);
+    }
 }
 
 function deleteProduct(productId) {
-    products = products.filter(product => product.id !== productId);
-    displayProducts();
-    Swal.fire({
-        title: 'Proizvod obrisan!',
-        icon: 'success',
-        confirmButtonText: 'U redu'
-    });
+    try {
+        products = products.filter(product => product.id !== productId);
+        displayProducts();
+        Swal.fire({
+            title: 'Proizvod obrisan!',
+            icon: 'success',
+            confirmButtonText: 'U redu'
+        });
+    } catch (error) {
+        console.error('Error deleting product:', error);
+    }
 }
 
 function addToOrder(productId) {
-    const product = products.find(p => p.id === productId);
-    const existingProduct = order.find(item => item.product_id === productId);
-    if (existingProduct) {
-        existingProduct.quantity += 1;
-    } else {
-        order.push({ product_id: productId, name: product.name, price: product.price, quantity: 1 });
+    try {
+        const product = products.find(p => p.id === productId);
+        const existingProduct = order.find(item => item.product_id === productId);
+        if (existingProduct) {
+            existingProduct.quantity += 1;
+        } else {
+            order.push({ product_id: productId, name: product.name, price: product.price, quantity: 1 });
+        }
+        updateOrderSummary();
+    } catch (error) {
+        console.error('Error adding product to order:', error);
     }
-    updateOrderSummary();
 }
 
 function updateOrderSummary() {
-    const orderSummary = document.getElementById('order-summary');
-    orderSummary.innerHTML = '';
-    let totalPrice = 0;
+    try {
+        const orderSummary = document.getElementById('order-summary');
+        orderSummary.innerHTML = '';
+        let totalPrice = 0;
 
-    order.forEach(item => {
-        const listItem = document.createElement('li');
-        listItem.textContent = `${item.name} - ${item.price.toFixed(2)}KM x ${item.quantity}`;
-        orderSummary.appendChild(listItem);
-        totalPrice += item.price * item.quantity;
-    });
+        order.forEach(item => {
+            const listItem = document.createElement('li');
+            listItem.textContent = `${item.name} - ${item.price.toFixed(2)}KM x ${item.quantity}`;
+            orderSummary.appendChild(listItem);
+            totalPrice += item.price * item.quantity;
+        });
 
-    document.getElementById('total-price').textContent = totalPrice.toFixed(2);
+        document.getElementById('total-price').textContent = totalPrice.toFixed(2);
+    } catch (error) {
+        console.error('Error updating order summary:', error);
+    }
 }
 
 function deleteOrder() {
-    order = [];
-    updateOrderSummary();
+    try {
+        order = [];
+        updateOrderSummary();
+    } catch (error) {
+        console.error('Error deleting order:', error);
+    }
 }
 
 function sendOrder() {
-    const orderData = {
-        items: JSON.stringify(order)
-    };
-    console.log('Sending order:', orderData);
+    try {
+        const orderData = {
+            items: JSON.stringify(order)
+        };
+        console.log('Sending order:', orderData);
 
-    Swal.fire({
-        title: 'Da li ste sigurni?',
-        text: "Da li želite da pošaljete porudžbinu?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Da, pošalji!',
-        cancelButtonText: 'Ne, otkaži'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch('/submit-order', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(orderData)
-            })
-            .then(response => response.text())
-            .then(data => {
-                console.log(data);
-                Swal.fire(
-                    'Porudžbina poslata!',
-                    'Vaša porudžbina je uspešno poslata.',
-                    'success'
-                );
-                deleteOrder();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire(
-                    'Greška!',
-                    'Došlo je do greške prilikom slanja porudžbine.',
-                    'error'
-                );
-            });
-        }
-    });
+        Swal.fire({
+            title: 'Da li ste sigurni?',
+            text: "Da li želite da pošaljete porudžbinu?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Da, pošalji!',
+            cancelButtonText: 'Ne, otkaži'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/submit-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    console.log(data);
+                    Swal.fire(
+                        'Porudžbina poslata!',
+                        'Vaša porudžbina je uspešno poslata.',
+                        'success'
+                    );
+                    deleteOrder();
+                })
+                .catch(error => {
+                    console.error('Error sending order:', error);
+                    Swal.fire(
+                        'Greška!',
+                        'Došlo je do greške prilikom slanja porudžbine.',
+                        'error'
+                    );
+                });
+            }
+        });
+    } catch (error) {
+        console.error('Error preparing order data:', error);
+    }
 }
 
 function addNotification(orderId, orderItems) {
-    notificationCount++;
-    updateNotificationCounter();
+    try {
+        notificationCount++;
+        updateNotificationCounter();
 
-    const notification = {
-        id: orderId,
-        items: JSON.parse(orderItems)
-    };
-    notifications.push(notification);
-    displayNotification(notification);
+        const notification = {
+            id: orderId,
+            items: JSON.parse(orderItems)
+        };
+        notifications.push(notification);
+        displayNotification(notification);
+    } catch (error) {
+        console.error('Error adding notification:', error);
+    }
 }
 
 function updateNotificationCounter() {
-    notificationCounter.textContent = notificationCount;
+    try {
+        notificationCounter.textContent = notificationCount;
+    } catch (error) {
+        console.error('Error updating notification counter:', error);
+    }
 }
 
 function displayNotification(notification) {
-    const notificationItem = document.createElement('div');
-    notificationItem.className = 'notification-item';
-    notificationItem.innerHTML = `
-        <p>Porudžbina ${notification.id} je spremna</p>
-        <ul>${formatOrderItems(JSON.stringify(notification.items))}</ul>
-    `;
-    notificationsList.appendChild(notificationItem);
+    try {
+        const notificationItem = document.createElement('div');
+        notificationItem.className = 'notification-item';
+        notificationItem.innerHTML = `
+            <p>Porudžbina ${notification.id} je spremna</p>
+            <ul>${formatOrderItems(JSON.stringify(notification.items))}</ul>
+        `;
+        notificationsList.appendChild(notificationItem);
+    } catch (error) {
+        console.error('Error displaying notification:', error);
+    }
 }
 
 function formatOrderItems(itemsJson) {
-    const items = JSON.parse(itemsJson);
-    return items.map(item => `
-        <li><strong>${item.name}</strong> - ${item.quantity} x ${item.price.toFixed(2)}KM</li>
-    `).join('');
+    try {
+        const items = JSON.parse(itemsJson);
+        return items.map(item => `
+            <li><strong>${item.name}</strong> - ${item.quantity} x ${item.price.toFixed(2)}KM</li>
+        `).join('');
+    } catch (error) {
+        console.error('Error formatting order items:', error);
+        return '';
+    }
 }

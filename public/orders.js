@@ -10,8 +10,24 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchNewOrders();
 
     socket.onmessage = (event) => {
-        const newOrder = JSON.parse(event.data);
-        addOrderToPage(newOrder);
+        try {
+            const newOrder = JSON.parse(event.data);
+            addOrderToPage(newOrder);
+        } catch (error) {
+            console.error('Error parsing WebSocket message:', error);
+        }
+    };
+
+    socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+    };
+
+    socket.onclose = (event) => {
+        if (event.wasClean) {
+            console.log(`WebSocket connection closed cleanly, code=${event.code} reason=${event.reason}`);
+        } else {
+            console.error('WebSocket connection died');
+        }
     };
 
     viewHistoryButton.addEventListener('click', () => {
@@ -32,11 +48,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function fetchNewOrders() {
     fetch('/new-orders')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             displayOrders(data);
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error fetching new orders:', error);
+        });
 }
 
 function displayOrders(orders) {
@@ -48,16 +71,20 @@ function displayOrders(orders) {
 }
 
 function addOrderToPage(order) {
-    const orderDiv = document.createElement('div');
-    orderDiv.className = 'order';
-    const orderItemsStr = JSON.stringify(order.items);
-    orderDiv.innerHTML = `
-        <p>Broj Porudžbine: ${order.id}</p>
-        <h2>Sadržaj:</h2>
-        <ul>${formatOrderItems(order.items)}</ul>
-        <button style="margin-top:15px;" onclick='completeOrder(${order.id}, ${JSON.stringify(orderItemsStr)})'>Porudžbina je spremna</button>
-    `;
-    ordersContainer.appendChild(orderDiv);
+    try {
+        const orderDiv = document.createElement('div');
+        orderDiv.className = 'order';
+        const orderItemsStr = JSON.stringify(order.items);
+        orderDiv.innerHTML = `
+            <p>Broj Porudžbine: ${order.id}</p>
+            <h2>Sadržaj:</h2>
+            <ul>${formatOrderItems(order.items)}</ul>
+            <button style="margin-top:15px;" onclick='completeOrder(${order.id}, ${JSON.stringify(orderItemsStr)})'>Porudžbina je spremna</button>
+        `;
+        ordersContainer.appendChild(orderDiv);
+    } catch (error) {
+        console.error('Error adding order to page:', error);
+    }
 }
 
 function completeOrder(orderId, orderItems) {
@@ -79,7 +106,12 @@ function completeOrder(orderId, orderItems) {
                 },
                 body: JSON.stringify({ orderId })
             })
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
             .then(data => {
                 console.log(data);
                 fetchNewOrders(); 
@@ -93,7 +125,7 @@ function completeOrder(orderId, orderItems) {
                 console.log("poslat order");
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error completing order:', error);
                 Swal.fire(
                     'Greška!',
                     'Došlo je do greške prilikom potvrđivanja porudžbine.',
@@ -106,11 +138,18 @@ function completeOrder(orderId, orderItems) {
 
 function fetchOrderHistory() {
     fetch('/order-history')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             displayOrderHistory(data);
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error fetching order history:', error);
+        });
 }
 
 function displayOrderHistory(orders) {
@@ -136,9 +175,13 @@ function displayOrderHistory(orders) {
 }
 
 function formatOrderItems(itemsJson) {
-    const items = JSON.parse(itemsJson);
-    return items.map(item => `
-        <li><strong>${item.name}</strong> - ${item.quantity} x ${item.price.toFixed(2)}KM</li>
-    `).join('');
+    try {
+        const items = JSON.parse(itemsJson);
+        return items.map(item => `
+            <li><strong>${item.name}</strong> - ${item.quantity} x ${item.price.toFixed(2)}KM</li>
+        `).join('');
+    } catch (error) {
+        console.error('Error formatting order items:', error);
+        return '';
+    }
 }
-

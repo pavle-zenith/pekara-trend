@@ -178,7 +178,10 @@ function formatOrderItems(itemsJson) {
     try {
         const items = JSON.parse(itemsJson);
         return items.map(item => `
-            <li><strong>${item.name}</strong> - ${item.quantity} x ${item.price.toFixed(2)}KM</li>
+            <li>
+                <img src="${item.image}" alt="${item.name}" style="width:50px;height:50px;vertical-align:middle;margin-right:10px;">
+                <strong>${item.name}</strong> - ${item.quantity} x ${item.price.toFixed(2)}KM
+            </li>
         `).join('');
     } catch (error) {
         console.error('Error formatting order items:', error);

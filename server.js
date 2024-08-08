@@ -64,6 +64,19 @@ app.post('/add-product', upload.single('product-image'), (req, res, next) => {
     });
 });
 
+app.delete('/delete-product/:id', (req, res, next) => {
+    const productId = req.params.id;
+    const query = 'DELETE FROM products WHERE id = ?';
+    
+    db.query(query, [productId], (err, result) => {
+        if (err) {
+            return next(err);
+        } else {
+            res.status(200).send('Product deleted');
+        }
+    });
+});
+
 app.get('/order-history', (req, res, next) => {
     const query = 'SELECT * FROM orders';
     db.query(query, (err, results) => {

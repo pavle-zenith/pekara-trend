@@ -110,6 +110,7 @@ function fetchProducts() {
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
+                console.log(response.json())
             }
             return response.json();
         })
@@ -137,13 +138,13 @@ function addProductToPage(product) {
         const productDiv = document.createElement('div');
         productDiv.className = 'product';
         productDiv.innerHTML = `
-            <div class="card">
+            <div class="card" onclick="addToOrder(${product.id})">
                 <img src="${product.image}" alt="${product.name}">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <h3>${product.name}</h3>
                     <p>${product.price.toFixed(2)}KM</p>
                 </div>
-                <button class="btn delete-product" style="width:150px; float:right;" onclick="deleteProduct(${product.id})">Obriši</button>
+                <button class="btn delete-product" style="width:150px; float:right;" onclick="event.stopPropagation(); deleteProduct(${product.id})">Obriši</button>
             </div>
         `;
         productsContainer.appendChild(productDiv);
@@ -153,13 +154,34 @@ function addProductToPage(product) {
 }
 
 function deleteProduct(productId) {
+    event.stopPropagation();
     try {
-        products = products.filter(product => product.id !== productId);
-        displayProducts();
-        Swal.fire({
-            title: 'Proizvod obrisan!',
-            icon: 'success',
-            confirmButtonText: 'U redu'
+        fetch(`/delete-product/${productId}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text();
+        })
+        .then(data => {
+            console.log(data);
+            products = products.filter(product => product.id !== productId);
+            displayProducts();
+            Swal.fire({
+                title: 'Proizvod obrisan!',
+                icon: 'success',
+                confirmButtonText: 'U redu'
+            });
+        })
+        .catch(error => {
+            console.error('Error deleting product:', error);
+            Swal.fire(
+                'Greška!',
+                'Došlo je do greške prilikom brisanja proizvoda.',
+                'error'
+            );
         });
     } catch (error) {
         console.error('Error deleting product:', error);

@@ -110,7 +110,6 @@ function fetchProducts() {
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
-                console.log(response.json())
             }
             return response.json();
         })
@@ -195,7 +194,7 @@ function addToOrder(productId) {
         if (existingProduct) {
             existingProduct.quantity += 1;
         } else {
-            order.push({ product_id: productId, name: product.name, price: product.price, quantity: 1 });
+            order.push({ product_id: productId, name: product.name, price: product.price, quantity: 1, image: product.image });
         }
         updateOrderSummary();
     } catch (error) {
@@ -211,7 +210,7 @@ function updateOrderSummary() {
 
         order.forEach(item => {
             const listItem = document.createElement('li');
-            listItem.textContent = `${item.name} - ${item.price.toFixed(2)}KM x ${item.quantity}`;
+            listItem.innerHTML = `<img src="${item.image}" alt="${item.name}" style="width:50px;height:50px;vertical-align:middle;margin-right:10px;">${item.name} - ${item.price.toFixed(2)}KM x ${item.quantity}`;
             orderSummary.appendChild(listItem);
             totalPrice += item.price * item.quantity;
         });
@@ -328,7 +327,10 @@ function formatOrderItems(itemsJson) {
     try {
         const items = JSON.parse(itemsJson);
         return items.map(item => `
-            <li><strong>${item.name}</strong> - ${item.quantity} x ${item.price.toFixed(2)}KM</li>
+            <li>
+                <img src="${item.image}" alt="${item.name}" style="width:50px;height:50px;vertical-align:middle;margin-right:10px;">
+                <strong>${item.name}</strong> - ${item.quantity} x ${item.price.toFixed(2)}KM
+            </li>
         `).join('');
     } catch (error) {
         console.error('Error formatting order items:', error);

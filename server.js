@@ -11,19 +11,16 @@ const app = express();
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-const db = mysql.createConnection({
+// Kreiranje MySQL pool konekcije
+const pool = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-});
-
-db.connect((err) => {
-    if (err) {
-        console.error('Error connecting to the database:', err.stack);
-        return;
-    }
-    console.log('Connected to the database');
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    keepAlive: true
 });
 
 const storage = multer.diskStorage({
@@ -40,7 +37,7 @@ const upload = multer({ storage });
 // Endpoint to fetch all products
 app.get('/products', (req, res, next) => {
     const query = 'SELECT * FROM products';
-    db.query(query, (err, results) => {
+    pool.query(query, (err, results) => {
         if (err) {
             console.log(err);
             return next(err);
@@ -55,7 +52,7 @@ app.post('/add-product', upload.single('product-image'), (req, res, next) => {
     const image = '/images/' + req.file.filename;
 
     const query = 'INSERT INTO products (name, image, price) VALUES (?, ?, ?)';
-    db.query(query, [name, image, price], (err, result) => {
+    pool.query(query, [name, image, price], (err, result) => {
         if (err) {
             return next(err);
         } else {
@@ -68,7 +65,7 @@ app.delete('/delete-product/:id', (req, res, next) => {
     const productId = req.params.id;
     const query = 'DELETE FROM products WHERE id = ?';
     
-    db.query(query, [productId], (err, result) => {
+    pool.query(query, [productId], (err, result) => {
         if (err) {
             return next(err);
         } else {
@@ -79,7 +76,7 @@ app.delete('/delete-product/:id', (req, res, next) => {
 
 app.get('/order-history', (req, res, next) => {
     const query = 'SELECT * FROM orders';
-    db.query(query, (err, results) => {
+    pool.query(query, (err, results) => {
         if (err) {
             return next(err);
         } else {
@@ -91,7 +88,7 @@ app.get('/order-history', (req, res, next) => {
 app.post('/submit-order', (req, res, next) => {
     const orderData = req.body;
     const query = 'INSERT INTO orders (items, status) VALUES (?, "new")';
-    db.query(query, [orderData.items], (err, result) => {
+    pool.query(query, [orderData.items], (err, result) => {
         if (err) {
             return next(err);
         } else {
@@ -110,7 +107,7 @@ app.post('/submit-order', (req, res, next) => {
 // Endpoint to fetch new orders
 app.get('/new-orders', (req, res, next) => {
     const query = 'SELECT * FROM orders WHERE status = "new"';
-    db.query(query, (err, results) => {
+    pool.query(query, (err, results) => {
         if (err) {
             return next(err);
         } else {
@@ -124,13 +121,13 @@ app.post('/complete-order', (req, res, next) => {
     const { orderId } = req.body;
     console.log('Order completed:', orderId);
     const query = 'UPDATE orders SET status = "complete" WHERE id = ?';
-    db.query(query, [orderId], (err, result) => {
+    pool.query(query, [orderId], (err, result) => {
         if (err) {
             return next(err);
         } else {
             res.status(200).send('Order completed');
             const selectOrderQuery = 'SELECT * FROM orders WHERE id = ?';
-            db.query(selectOrderQuery, [orderId], (err, result) => {
+            pool.query(selectOrderQuery, [orderId], (err, result) => {
                 if (err) {
                     console.log(err);
                 } else {
@@ -171,12 +168,10 @@ app.use((err, req, res, next) => {
 // Unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    // Application specific logging, throwing an error, or other logic here
 });
 
 // Uncaught exceptions
 process.on('uncaughtException', (err) => {
     console.error('Uncaught Exception:', err);
-    // Perform any necessary cleanup and shutdown the application safely
     process.exit(1); // Optional: exit the process
 });

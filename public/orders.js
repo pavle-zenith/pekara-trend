@@ -207,12 +207,30 @@ function formatOrderItems(itemsJson) {
 }
 
 function exportToExcel(orders) {
-    const worksheet = XLSX.utils.json_to_sheet(orders.map(order => ({
-        'Broj Porudžbine': order.id,
-        'Status': order.status === 'complete' ? 'Završeno' : 'Nova porudžbina',
-        'Sadržaj': order.items.map(item => `${item.name} - ${item.quantity} x ${item.price.toFixed(2)}KM`).join(', '),
-        'Datum': new Date(order.order_date).toLocaleString()
-    })));
+    const worksheet = XLSX.utils.json_to_sheet(orders.map(order => {
+        // Proveri da li je order.items niz, ako nije pokušaj da ga parsiraš
+        let items = [];
+        if (Array.isArray(order.items)) {
+            items = order.items;
+        } else {
+            try {
+                items = JSON.parse(order.items);
+            } catch (error) {
+                console.error('Error parsing order items:', error);
+                items = []; // Postavi prazni niz ako parsiranje nije uspelo
+            }
+        }
+
+        // Mapiranje sadržaja porudžbine u string
+        const formattedItems = items.map(item => `${item.name} - ${item.quantity} x ${item.price.toFixed(2)}KM`).join(', ');
+
+        return {
+            'Broj Porudžbine': order.id,
+            'Status': order.status === 'complete' ? 'Završeno' : 'Nova porudžbina',
+            'Sadržaj': formattedItems,
+            'Datum': new Date(order.order_date).toLocaleString()
+        };
+    }));
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Istorija Porudžbina');

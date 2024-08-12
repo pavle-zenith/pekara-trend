@@ -3,6 +3,7 @@ const historyPopup = document.getElementById('history-popup');
 const orderHistoryContainer = document.getElementById('order-history');
 const viewHistoryButton = document.getElementById('view-history');
 const closeButtonHistory = historyPopup.querySelector('.close-button');
+const exportHistoryButton = document.getElementById('export-history');
 
 const socket = new WebSocket('ws://157.90.253.184:80');
 
@@ -43,6 +44,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target === historyPopup) {
             historyPopup.style.display = 'none';
         }
+    });
+
+    exportHistoryButton.addEventListener('click', () => {
+        fetch('/order-history')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                exportToExcel(data);
+            })
+            .catch(error => {
+                console.error('Error fetching order history:', error);
+            });
     });
 });
 
@@ -187,4 +204,18 @@ function formatOrderItems(itemsJson) {
         console.error('Error formatting order items:', error);
         return '';
     }
+}
+
+function exportToExcel(orders) {
+    const worksheet = XLSX.utils.json_to_sheet(orders.map(order => ({
+        'Broj Porudžbine': order.id,
+        'Status': order.status === 'complete' ? 'Završeno' : 'Nova porudžbina',
+        'Sadržaj': order.items.map(item => `${item.name} - ${item.quantity} x ${item.price.toFixed(2)}KM`).join(', '),
+        'Datum': new Date(order.order_date).toLocaleString()
+    })));
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Istorija Porudžbina');
+
+    XLSX.writeFile(workbook, 'Istorija_Porudžbina.xlsx');
 }

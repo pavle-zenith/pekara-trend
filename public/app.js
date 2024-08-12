@@ -154,37 +154,50 @@ function addProductToPage(product) {
 
 function deleteProduct(productId) {
     event.stopPropagation();
-    try {
-        fetch(`/delete-product/${productId}`, {
-            method: 'DELETE'
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+    Swal.fire({
+        title: 'Da li ste sigurni?',
+        text: "Ova akcija će obrisati proizvod. Da li želite da nastavite?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Da, obriši!',
+        cancelButtonText: 'Ne, otkaži'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            try {
+                fetch(`/delete-product/${productId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    console.log(data);
+                    products = products.filter(product => product.id !== productId);
+                    displayProducts();
+                    Swal.fire({
+                        title: 'Proizvod obrisan!',
+                        icon: 'success',
+                        confirmButtonText: 'U redu'
+                    });
+                })
+                .catch(error => {
+                    console.error('Error deleting product:', error);
+                    Swal.fire(
+                        'Greška!',
+                        'Došlo je do greške prilikom brisanja proizvoda.',
+                        'error'
+                    );
+                });
+            } catch (error) {
+                console.error('Error deleting product:', error);
             }
-            return response.text();
-        })
-        .then(data => {
-            console.log(data);
-            products = products.filter(product => product.id !== productId);
-            displayProducts();
-            Swal.fire({
-                title: 'Proizvod obrisan!',
-                icon: 'success',
-                confirmButtonText: 'U redu'
-            });
-        })
-        .catch(error => {
-            console.error('Error deleting product:', error);
-            Swal.fire(
-                'Greška!',
-                'Došlo je do greške prilikom brisanja proizvoda.',
-                'error'
-            );
-        });
-    } catch (error) {
-        console.error('Error deleting product:', error);
-    }
+        }
+    });
 }
 
 function addToOrder(productId) {

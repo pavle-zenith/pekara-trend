@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const newOrder = JSON.parse(event.data);
             addOrderToPage(newOrder);
+
+            const audio = document.getElementById('new-order-sound');
+            audio.play();
         } catch (error) {
             console.error('Error parsing WebSocket message:', error);
         }

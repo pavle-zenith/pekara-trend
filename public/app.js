@@ -243,61 +243,6 @@ function deleteOrder() {
     }
 }
 
-function sendOrder() {
-    try {
-        const orderData = {
-            items: JSON.stringify(order)
-        };
-        console.log('Sending order:', orderData);
-
-        Swal.fire({
-            title: 'Da li ste sigurni?',
-            text: "Da li želite da pošaljete porudžbinu?",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Da, pošalji!',
-            cancelButtonText: 'Ne, otkaži'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch('/submit-order', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(orderData)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.text();
-                })
-                .then(data => {
-                    console.log(data);
-                    Swal.fire(
-                        'Porudžbina poslata!',
-                        'Vaša porudžbina je uspešno poslata.',
-                        'success'
-                    );
-                    deleteOrder();
-                })
-                .catch(error => {
-                    console.error('Error sending order:', error);
-                    Swal.fire(
-                        'Greška!',
-                        'Došlo je do greške prilikom slanja porudžbine.',
-                        'error'
-                    );
-                });
-            }
-        });
-    } catch (error) {
-        console.error('Error preparing order data:', error);
-    }
-}
-
 function addNotification(orderId, orderItems) {
     try {
         notificationCount++;

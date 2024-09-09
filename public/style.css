@@ -136,7 +136,7 @@ h1 {
     gap: 10px;
 }
 .product {
-    width: calc(25% - 40px);
+    width: calc(20% - 40px);
 }
 .product img {
     width: 100%;
@@ -308,5 +308,5 @@ button.btn:hover {
 
 /* Styles for main content */
 .main-content {
-    margin-right: 340px; /* Adjust margin to make space for the fixed sidebar */
-}
+    margin-bottom: 100px; /* Adjust margin to make space for the fixed sidebar */
+} 

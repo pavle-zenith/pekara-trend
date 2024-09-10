@@ -108,7 +108,16 @@ function addOrderToPage(order) {
 }
 
 function completeOrder(orderId, orderItems) {
-    
+    Swal.fire({
+        title: 'Da li ste sigurni?',
+        text: "Da li želite da potvrdite ovu porudžbinu kao spremnu?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Da, potvrdite!',
+        cancelButtonText: 'Ne, otkaži'
+    }).then((result) => {
         if (result.isConfirmed) {
             fetch('/complete-order', {
                 method: 'POST',
@@ -140,8 +149,8 @@ function completeOrder(orderId, orderItems) {
                 );
             });
         }
-    
-
+    });
+}
 
 function fetchOrderHistory() {
     fetch('/order-history')
@@ -226,4 +235,4 @@ function exportToExcel(orders) {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Istorija Porudžbina');
 
     XLSX.writeFile(workbook, 'Istorija_Porudžbina.xlsx');
-}};
+}

@@ -108,16 +108,7 @@ function addOrderToPage(order) {
 }
 
 function completeOrder(orderId, orderItems) {
-    Swal.fire({
-        title: 'Da li ste sigurni?',
-        text: "Da li želite da potvrdite ovu porudžbinu kao spremnu?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Da, potvrdite!',
-        cancelButtonText: 'Ne, otkaži'
-    }).then((result) => {
+    
         if (result.isConfirmed) {
             fetch('/complete-order', {
                 method: 'POST',
@@ -135,11 +126,7 @@ function completeOrder(orderId, orderItems) {
             .then(data => {
                 console.log(data);
                 fetchNewOrders(); 
-                Swal.fire(
-                    'Porudžbina potvrđena!',
-                    'Porudžbina je uspešno potvrđena kao spremna.',
-                    'success'
-                );
+                
 
                 socket.send(JSON.stringify({ orderId, orderItems }));
                 console.log("poslat order");
@@ -153,8 +140,8 @@ function completeOrder(orderId, orderItems) {
                 );
             });
         }
-    });
-}
+    
+
 
 function fetchOrderHistory() {
     fetch('/order-history')

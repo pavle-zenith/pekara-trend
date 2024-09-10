@@ -226,4 +226,4 @@ function exportToExcel(orders) {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Istorija Porudžbina');
 
     XLSX.writeFile(workbook, 'Istorija_Porudžbina.xlsx');
-}
+}};

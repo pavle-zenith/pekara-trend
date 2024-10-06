@@ -4,11 +4,15 @@ const orderHistoryContainer = document.getElementById('order-history');
 const viewHistoryButton = document.getElementById('view-history');
 const closeButtonHistory = historyPopup.querySelector('.close-button');
 const exportHistoryButton = document.getElementById('export-history');
+const dailyReportButton = document.getElementById('daily-report'); // Dugme za dnevni izveštaj
+const completedOrdersList = document.getElementById('completed-orders-list'); // Lista za zavrsene porudzbine
+const resetReportButton = document.getElementById('reset-report'); // Dugme za resetovanje izveštaja
 
 const socket = new WebSocket('ws://157.90.253.184:80');
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchNewOrders();
+    fetchCompletedOrders(); // Učitavanje završenih porudžbina
 
     socket.onmessage = (event) => {
         try {
@@ -63,6 +67,14 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(error => {
                 console.error('Error fetching order history:', error);
             });
+    });
+
+    dailyReportButton.addEventListener('click', () => {
+        generateDailyReport(); // Funkcija za generisanje dnevnog izveštaja
+    });
+
+    resetReportButton.addEventListener('click', () => {
+        resetDailyReport(); // Funkcija za resetovanje izveštaja
     });
 });
 
@@ -136,9 +148,9 @@ function completeOrder(orderId, orderItems) {
                 console.log(data);
                 fetchNewOrders(); 
                 
-
                 socket.send(JSON.stringify({ orderId, orderItems }));
-                console.log("poslat order");
+                console.log("Poslat order");
+                fetchCompletedOrders(); // Osvežavanje liste završenih porudžbina
             })
             .catch(error => {
                 console.error('Error completing order:', error);
@@ -190,12 +202,39 @@ function displayOrderHistory(orders) {
     });
 }
 
+function fetchCompletedOrders() {
+    fetch('/completed-orders')
+        .then(response => response.json()) // Očekuje da odgovor bude JSON
+        .then(data => {
+            console.log('Response data:', data); // Proveri da li su podaci validni JSON
+            displayCompletedOrders(data);
+        })
+        .catch(error => {
+            console.error('Error fetching completed orders:', error);
+        });
+}
+
+function displayCompletedOrders(orders) {
+    completedOrdersList.innerHTML = '';
+
+    orders.forEach(order => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `
+            <strong>Porudžbina #${order.id}</strong><br>
+            <small>${new Date(order.order_date).toLocaleString()}</small><br>
+            <ul>${formatOrderItems(order.items)}</ul>
+        `;
+        listItem.className = 'completed-order';
+        completedOrdersList.appendChild(listItem);
+    });
+}
+
 function formatOrderItems(itemsJson) {
     try {
         const items = JSON.parse(itemsJson);
         return items.map(item => `
-            <li>
-                <img src="${item.image}" alt="${item.name}" style="width:50px;height:50px;vertical-align:middle;margin-right:10px;">
+            <li style="font-size:20px;">
+                <img src="${item.image}" alt="${item.name}" style="width:75px;height:75px;vertical-align:middle;margin-right:10px;">
                 <strong>${item.name}</strong> - ${item.quantity} x ${item.price.toFixed(2)}KM
             </li>
         `).join('');
@@ -207,7 +246,6 @@ function formatOrderItems(itemsJson) {
 
 function exportToExcel(orders) {
     const worksheet = XLSX.utils.json_to_sheet(orders.map(order => {
-        // Proveri da li je order.items niz, ako nije pokušaj da ga parsiraš
         let items = [];
         if (Array.isArray(order.items)) {
             items = order.items;
@@ -216,11 +254,10 @@ function exportToExcel(orders) {
                 items = JSON.parse(order.items);
             } catch (error) {
                 console.error('Error parsing order items:', error);
-                items = []; // Postavi prazni niz ako parsiranje nije uspelo
+                items = [];
             }
         }
 
-        // Mapiranje sadržaja porudžbine u string
         const formattedItems = items.map(item => `${item.name} - ${item.quantity} x ${item.price.toFixed(2)}KM`).join(', ');
 
         return {
@@ -235,4 +272,82 @@ function exportToExcel(orders) {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Istorija Porudžbina');
 
     XLSX.writeFile(workbook, 'Istorija_Porudžbina.xlsx');
+}
+
+function generateDailyReport() {
+    fetch('/daily-orders')
+        .then(response => response.json())
+        .then(orders => {
+            const reportData = {};
+
+            orders.forEach(order => {
+                const items = JSON.parse(order.items);
+                items.forEach(item => {
+                    if (!reportData[item.name]) {
+                        reportData[item.name] = { quantity: 0, totalPrice: 0 };
+                    }
+                    reportData[item.name].quantity += item.quantity;
+                    reportData[item.name].totalPrice += item.quantity * item.price;
+                });
+            });
+
+            const report = Object.keys(reportData).map(productName => ({
+                'Proizvod': productName,
+                'Ukupno puta naručeno': reportData[productName].quantity,
+                'Ukupna cena': reportData[productName].totalPrice.toFixed(2)
+            }));
+
+            // Snimanje izveštaja u bazu
+            report.forEach(item => {
+                fetch('/save-daily-report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        product_name: item['Proizvod'],
+                        quantity: item['Ukupno puta naručeno'],
+                        total_price: item['Ukupna cena']
+                    })
+                });
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(report);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Dnevni Izveštaj');
+
+            XLSX.writeFile(workbook, 'Dnevni_Izveštaj.xlsx');
+            
+            // Resetovanje brojača nakon generisanja izveštaja
+            fetch('/reset-daily-report', { method: 'POST' });
+        })
+        .catch(error => {
+            console.error('Error generating daily report:', error);
+        });
+}
+
+function resetDailyReport() {
+    fetch('/reset-daily-report', { method: 'POST' })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text();
+        })
+        .then(data => {
+            console.log('Daily report reset:', data);
+            Swal.fire(
+                'Izveštaj resetovan!',
+                'Dnevni izveštaj je uspešno resetovan.',
+                'success'
+            );
+        })
+        .catch(error => {
+            console.error('Error resetting daily report:', error);
+            Swal.fire(
+                'Greška!',
+                'Došlo je do greške prilikom resetovanja izveštaja.',
+                'error'
+            );
+        });
 }

@@ -18,6 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const closePopupButton = document.querySelector('.close-button');
     const productForm = document.getElementById('product-form');
 
+    const editPopup = document.getElementById('edit-popup');
+    const closeEditPopupButton = document.querySelector('.edit-close-button');
+    const editProductForm = document.getElementById('edit-product-form');
+
+    let currentEditProductId = null; // Čuvamo ID proizvoda koji se edituje
+
     openPopupButton.addEventListener('click', () => {
         popup.style.display = 'flex';
     });
@@ -26,9 +32,15 @@ document.addEventListener('DOMContentLoaded', () => {
         popup.style.display = 'none';
     });
 
+    closeEditPopupButton.addEventListener('click', () => {
+        editPopup.style.display = 'none';
+    });
+
     window.addEventListener('click', (event) => {
         if (event.target == popup) {
             popup.style.display = 'none';
+        } else if (event.target == editPopup) {
+            editPopup.style.display = 'none';
         }
     });
 
@@ -56,6 +68,25 @@ document.addEventListener('DOMContentLoaded', () => {
             addProductToPage(newProduct);
             productForm.reset();
             popup.style.display = 'none';
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // Dodaj funkcionalnost za editovanje proizvoda
+    editProductForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const formData = new FormData(editProductForm);
+        formData.append('product-id', currentEditProductId);
+
+        fetch(`/edit-product/${currentEditProductId}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(updatedProduct => {
+            products = products.map(p => p.id === updatedProduct.id ? updatedProduct : p);
+            displayProducts();
+            editPopup.style.display = 'none';
         })
         .catch(error => console.error('Error:', error));
     });
@@ -143,14 +174,58 @@ function addProductToPage(product) {
                     <h3>${product.name}</h3>
                     <p>${product.price.toFixed(2)}KM</p>
                 </div>
-                <button class="btn delete-product" style="width:150px; float:right;" onclick="event.stopPropagation(); deleteProduct(${product.id})">Obriši</button>
             </div>
+            <div class="btn-row" style="display:flex;"> 
+
+                <button class="btn" style="margin-right: 5px;" onclick="openEditPopup(${product.id})">Izmeni</button>
+                <button class="btn delete-product" style="background-color:black; float:right;" onclick="event.stopPropagation(); deleteProduct(${product.id})">Obriši</button>
+
+            </div>
+            
         `;
         productsContainer.appendChild(productDiv);
     } catch (error) {
         console.error('Error adding product to page:', error);
     }
 }
+
+// Funkcija za otvaranje popup-a za izmenu proizvoda
+function openEditPopup(productId) {
+    const product = products.find(p => p.id === productId);
+    if (product) {
+        currentEditProductId = product.id;
+        document.getElementById('edit-product-name').value = product.name;
+        document.getElementById('edit-product-price').value = product.price;
+        document.getElementById('edit-popup').style.display = 'flex';
+    }
+}
+
+// Funkcija za slanje izmenjenih podataka na server i ponovno učitavanje proizvoda
+document.getElementById('edit-product-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const formData = new FormData();
+    formData.append('edit-product-name', document.getElementById('edit-product-name').value);
+    formData.append('edit-product-price', document.getElementById('edit-product-price').value);
+    const fileInput = document.getElementById('edit-product-image');
+    
+    // Proveravamo da li je korisnik dodao novu sliku
+    if (fileInput.files.length > 0) {
+        formData.append('edit-product-image', fileInput.files[0]);
+    }
+
+    fetch(`/edit-product/${currentEditProductId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(updatedProduct => {
+        // Osvežavamo listu proizvoda
+        fetchProducts(); // Učitaj proizvode ponovo nakon što je izmena uspešno izvršena
+        document.getElementById('edit-popup').style.display = 'none'; // Zatvori popup
+    })
+    .catch(error => console.error('Error updating product:', error));
+});
 
 function deleteProduct(productId) {
     event.stopPropagation();
@@ -200,6 +275,7 @@ function deleteProduct(productId) {
     });
 }
 
+// Dodavanje proizvoda u narudžbinu
 function addToOrder(productId) {
     try {
         const product = products.find(p => p.id === productId);
@@ -215,15 +291,20 @@ function addToOrder(productId) {
     }
 }
 
+// Funkcija za ažuriranje narudžbine sa inputom za količinu
 function updateOrderSummary() {
     try {
         const orderSummary = document.getElementById('order-summary');
         orderSummary.innerHTML = '';
         let totalPrice = 0;
 
-        order.forEach(item => {
+        order.forEach((item, index) => {
             const listItem = document.createElement('li');
-            listItem.innerHTML = `<img src="${item.image}" alt="${item.name}" style="width:50px;height:50px;vertical-align:middle;margin-right:10px;">${item.name} - ${item.price.toFixed(2)}KM x ${item.quantity}`;
+            listItem.innerHTML = `
+                <img src="${item.image}" alt="${item.name}" style="width:50px;height:50px;vertical-align:middle;margin-right:10px;">
+                ${item.name} - <input type="number" min="1" value="${item.quantity}" onchange="updateQuantity(${index}, this.value)"> x ${item.price.toFixed(2)}KM
+                <button onclick="removeFromOrder(${index})" class="btn red" style="margin-top: 20px; padding: 10px 30px;">Obriši</button>
+            `;
             orderSummary.appendChild(listItem);
             totalPrice += item.price * item.quantity;
         });
@@ -232,6 +313,18 @@ function updateOrderSummary() {
     } catch (error) {
         console.error('Error updating order summary:', error);
     }
+}
+
+// Funkcija za ažuriranje količine proizvoda u narudžbini
+function updateQuantity(index, newQuantity) {
+    order[index].quantity = parseInt(newQuantity);
+    updateOrderSummary();
+}
+
+// Funkcija za brisanje proizvoda iz narudžbine
+function removeFromOrder(index) {
+    order.splice(index, 1);
+    updateOrderSummary();
 }
 
 function deleteOrder() {
@@ -280,6 +373,7 @@ function displayNotification(notification) {
         console.error('Error displaying notification:', error);
     }
 }
+
 function sendOrder() {
     try {
         const orderData = {
@@ -321,6 +415,7 @@ function sendOrder() {
         console.error('Error preparing order data:', error);
     }
 }
+
 function formatOrderItems(itemsJson) {
     try {
         const items = JSON.parse(itemsJson);

@@ -1,19 +1,15 @@
 /* General Styles */
 html { 
     height: 100vh;
-    
 }
 
 body {
-
     font-family: 'Helvetica Neue', Arial, sans-serif;
     background-color: #f4f7f6;
     color: #333;
     margin: 0;
     padding: 0;
-    
     box-sizing: border-box;
-
     min-height: 100vh;
 }
 
@@ -129,18 +125,35 @@ h1 {
     color: #333;
 }
 
+/* Novi stilovi za popup za izmenu proizvoda */
+.popup .edit-close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.3s;
+}
+
+.popup .edit-close-button:hover {
+    color: #333;
+}
+
 /* Index Page Styles */
 #products {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
 }
+
 .product {
-    width: calc(20% - 40px);
+    width: calc(20% - 100px);
 }
+
 .product img {
     width: 100%;
-    height:240px;
+    height: 240px;
     object-fit: cover;
     border-radius: 5px;
 }
@@ -150,19 +163,20 @@ h1 {
     padding: 20px;
     border-left: 1px solid #ccc;
     border-radius: 10px;
-    display:flex;
+    display: flex;
     justify-content: space-between;
 }
+
 .order-right {
-    display:flex;
+    display: flex;
     align-items: center;
     justify-content: center;
-    gap:20px;
+    gap: 20px;
 }
 
 .order-right button {
-    width:100%;
-    height:100%;
+    width: 100%;
+    height: 100%;
 }
 
 .sidebar h2 {
@@ -178,23 +192,26 @@ h1 {
 .sidebar li {
     padding: 5px 0;
 }
+
 .card {
-    cursor:pointer;
+    cursor: pointer;
 }
+
 .red {
     background-color: #d72633 !important;
 }
 
 footer {
-    width:100%;
+    width: 100%;
     background-color: #3347BD;
     position: fixed;
     bottom: 0;
     text-align: center;
-    color:#e0e0e0;
+    color: #e0e0e0;
 }
+
 footer a {
-    color:#e0e0e0;
+    color: #e0e0e0;
 }
 
 .row {
@@ -256,6 +273,7 @@ footer a {
     justify-content: space-between;
     align-items: center;
 }
+
 .form-group input[type="text"],
 .form-group input[type="file"],
 .form-group input[type="number"] {
@@ -278,35 +296,94 @@ button.btn {
     text-decoration: none;
     transition: background-color 0.3s;
 }
+
 .popup button {
-    width:100%;
+    width: 100%;
 }
+
 button.btn:hover {
     background-color: #0056b3;
 }
 
 .sidebar {
     display: flex;
-  justify-content: space-between;
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  width: 300px;
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
-  background-color: #f7f7f7;
-  padding: 20px;
-  border-left: 1px solid #ccc;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  height: 90%;
-  z-index: 999;
-  overflow-x: hidden;
-  overflow-y: scroll;
-  flex-direction: column;
+    justify-content: space-between;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 300px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    background-color: #f7f7f7;
+    padding: 20px;
+    border-left: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    height: 90%;
+    z-index: 999;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    flex-direction: column;
 }
 
 /* Styles for main content */
 .main-content {
     margin-bottom: 100px; /* Adjust margin to make space for the fixed sidebar */
-} 
+}
+
+.order-left ul li input[type="number"] {
+    width: 50px;
+    text-align: center;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.order-left ul li button {
+    background-color: #d72633 !important;
+    color: white;
+    padding: 5px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.sidebar {
+    position: fixed;
+    
+    right: 0;
+    width: 300px;
+    height: calc(100vh - 100px);
+    background-color: #f7f7f7;
+    padding: 20px;
+    overflow-y: auto;
+    border-left: 1px solid #ccc;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar h2 {
+    margin-bottom: 20px;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#orders {
+    display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-row: auto auto;
+  grid-column-gap: 20px;
+  grid-row-gap: 20px;
+}
+.completed-order {
+    border: 3px solid #ff747e !important;
+}

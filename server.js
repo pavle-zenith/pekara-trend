@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const multer = require('multer');
 const path = require('path');
 const WebSocket = require('ws');
+const XLSX = require('xlsx'); // Dodata biblioteka za rad sa Excel fajlovima
 // load env config
 require('dotenv').config();
 
@@ -61,6 +62,61 @@ app.post('/add-product', upload.single('product-image'), (req, res, next) => {
     });
 });
 
+app.post('/edit-product/:id', upload.single('edit-product-image'), (req, res, next) => {
+    const productId = req.params.id;
+    const { 'edit-product-name': name, 'edit-product-price': price } = req.body;
+
+    // Proveravamo validnost unosa
+    if (!name || !price || isNaN(price)) {
+        return res.status(400).json({ error: 'Invalid input data' });
+    }
+
+    // Proveravamo da li je korisnik poslao novu sliku ili ne
+    let image;
+    if (req.file) {
+        image = '/images/' + req.file.filename; // Nova slika ako je korisnik dodao novu
+    }
+
+    // Kreiramo SQL upit za ažuriranje sa ili bez slike
+    let query = 'UPDATE products SET name = ?, price = ?';
+    const queryParams = [name, price];
+
+    // Ako postoji nova slika, uključujemo je u upit
+    if (image) {
+        query += ', image = ?';
+        queryParams.push(image);
+    }
+
+    query += ' WHERE id = ?';
+    queryParams.push(productId);
+
+    // Pokrećemo upit u bazi
+    pool.query(query, queryParams, (err, result) => {
+        if (err) {
+            return next(err); // Greška pri izvršavanju upita
+        } else {
+            // Ažurirani proizvod koji vraćamo
+            const updatedProduct = {
+                id: productId,
+                name: name,
+                price: price,
+                image: image || req.body['existing-image'] // Ako nema nove slike, koristimo staru
+            };
+            res.status(200).json(updatedProduct); // Vraćamo izmenjeni proizvod kao odgovor
+        }
+    });
+});
+app.get('/completed-orders', (req, res, next) => {
+    const query = 'SELECT * FROM orders WHERE status = "complete" ORDER BY order_date DESC LIMIT 5';
+    pool.query(query, (err, results) => {
+        if (err) {
+            return next(err);
+        } else {
+            console.log('Results:', results); // Loguj podatke pre nego što ih pošalješ
+            res.status(200).json(results); // Sigurni smo da šaljemo JSON
+        }
+    });
+});
 app.delete('/delete-product/:id', (req, res, next) => {
     const productId = req.params.id;
     const query = 'DELETE FROM products WHERE id = ?';
@@ -140,6 +196,49 @@ app.post('/complete-order', (req, res, next) => {
         }
     });
 });
+
+// Endpoint for daily orders report
+app.get('/daily-orders', (req, res, next) => {
+    // Proveravamo vreme poslednjeg resetovanja izveštaja
+    const getLastResetTimeQuery = 'SELECT reset_time FROM report_reset ORDER BY reset_time DESC LIMIT 1';
+    
+    pool.query(getLastResetTimeQuery, (err, result) => {
+        if (err) {
+            return next(err);
+        }
+
+        const lastResetTime = result.length > 0 ? result[0].reset_time : null;
+
+        if (lastResetTime) {
+            // Preuzimamo sve porudžbine koje su napravljene posle poslednjeg resetovanja
+            const getOrdersQuery = 'SELECT items FROM orders WHERE order_date >= ? AND status = "complete"';
+            pool.query(getOrdersQuery, [lastResetTime], (err, ordersResult) => {
+                if (err) {
+                    return next(err);
+                } else {
+                    res.status(200).json(ordersResult);
+                }
+            });
+        } else {
+            res.status(200).json([]); // Ako nema resetovanja, vraća prazan izveštaj
+        }
+    });
+});
+
+app.post('/reset-daily-report', (req, res, next) => {
+    const query = 'INSERT INTO report_reset (reset_time) VALUES (CURRENT_TIMESTAMP)';
+
+    pool.query(query, (err, result) => {
+        if (err) {
+            console.error('Error executing query:', err); // Loguj grešku
+            return next(err); // Vraća grešku
+        } else {
+            console.log('Timestamp successfully inserted:', result);
+            res.status(200).send('Daily report reset successfully');
+        }
+    });
+});
+
 
 // WebSocket server setup
 const wss = new WebSocket.Server({ server: app.listen(process.env.PORT, () => {

@@ -13,6 +13,8 @@
             <h1>Porudžbine</h1>
             <button id="view-history" class="btn">Istorija Porudžbina</button>
             <button id="export-history" class="btn">Izvezi Istoriju u Excel</button>
+            <button id="daily-report" class="btn">Generiši Dnevni Izveštaj</button> <!-- Dodato dugme za dnevni izveštaj -->
+            <button id="reset-report" class="btn">Resetuj Izveštaj</button>
         </div>
         
         <div id="orders"></div>
@@ -27,7 +29,12 @@
             </div>
         </div>
     </div>
-
+    <div class="sidebar">
+        <h2>Poslednje Završene Porudžbine</h2>
+        <ul id="completed-orders-list">
+            <!-- Ova lista će se dinamički popunjavati -->
+        </ul>
+    </div>
     <footer>
         <p>&copy; 2024 Pekara Trend | Softver izradio <a href="https://belgrand.net/en/">BELGRAND</a></p>
     </footer>

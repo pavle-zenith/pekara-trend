@@ -17,17 +17,10 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.onmessage = (event) => {
         try {
             const newOrder = JSON.parse(event.data);
-    
-            // Pusti zvuk samo ako je nova porudžbina
-            if (newOrder.isNew) {
-                addOrderToPage(newOrder);
-    
-                const audio = document.getElementById('new-order-sound');
-                audio.play();
-            } else {
-                // Ako je završena porudžbina, samo osveži listu završenih porudžbina bez zvuka
-                fetchCompletedOrders();
-            }
+            addOrderToPage(newOrder);
+
+            const audio = document.getElementById('new-order-sound');
+            audio.play();
         } catch (error) {
             console.error('Error parsing WebSocket message:', error);
         }
@@ -155,10 +148,8 @@ function completeOrder(orderId, orderItems) {
                 console.log(data);
                 fetchNewOrders(); 
                 
-                // Dodajemo isCompleted flag da znamo da je porudžbina označena kao završena
-                socket.send(JSON.stringify({ orderId, orderItems, isCompleted: true }));
-                
-                console.log("Poslat order kao završen");
+                socket.send(JSON.stringify({ orderId, orderItems }));
+                console.log("Poslat order");
                 fetchCompletedOrders(); // Osvežavanje liste završenih porudžbina
             })
             .catch(error => {

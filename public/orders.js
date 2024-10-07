@@ -18,14 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const newOrder = JSON.parse(event.data);
     
-            // Pusti zvuk samo ako je nova porudžbina, a ne završena
-            if (!newOrder.isCompleted) {
+            // Pusti zvuk samo ako je nova porudžbina
+            if (newOrder.isNew) {
                 addOrderToPage(newOrder);
     
                 const audio = document.getElementById('new-order-sound');
                 audio.play();
             } else {
-                // Ako je završena porudžbina, samo je dodaj na stranicu bez zvuka
+                // Ako je završena porudžbina, samo osveži listu završenih porudžbina bez zvuka
                 fetchCompletedOrders();
             }
         } catch (error) {
@@ -157,6 +157,7 @@ function completeOrder(orderId, orderItems) {
                 
                 // Dodajemo isCompleted flag da znamo da je porudžbina označena kao završena
                 socket.send(JSON.stringify({ orderId, orderItems, isCompleted: true }));
+                
                 console.log("Poslat order kao završen");
                 fetchCompletedOrders(); // Osvežavanje liste završenih porudžbina
             })

@@ -16,11 +16,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     socket.onmessage = (event) => {
         try {
-            const newOrder = JSON.parse(event.data);
-            addOrderToPage(newOrder);
-
-            const audio = document.getElementById('new-order-sound');
-            audio.play();
+            const message = JSON.parse(event.data);
+    
+            // Proveravamo da li je nova porudžbina ili ažuriranje porudžbine
+            if (message.type === 'new-order') {
+                addOrderToPage(message);
+    
+                // Zvuk se pušta samo za novu porudžbinu
+                const audio = document.getElementById('new-order-sound');
+                audio.play();
+            } else if (message.type === 'order-update') {
+                // Ako je ažuriranje porudžbine, samo ažuriramo stranicu bez zvuka
+                fetchCompletedOrders(); // Osvežavanje završenih porudžbina
+            }
         } catch (error) {
             console.error('Error parsing WebSocket message:', error);
         }

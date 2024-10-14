@@ -152,10 +152,9 @@ app.post('/submit-order', (req, res, next) => {
                 id: result.insertId,
                 items: orderData.items,
                 status: 'new',
-                order_date: new Date(),
-                type: 'new-order' // Dodajemo tip poruke
+                order_date: new Date()
             };
-            broadcastOrder(newOrder); // Šaljemo porudžbinu sa novim tipom
+            broadcastOrder(newOrder);
             res.status(200).send('Order saved');
         }
     });
@@ -190,12 +189,10 @@ app.post('/complete-order', (req, res, next) => {
                 } else {
                     const order = result[0];
                     order.notification = true;
-                    
-                    // Oznaka za tip poruke (ažuriranje porudžbine)
-                    order.type = 'order-update'; 
-                    broadcastOrder(order); // Ova poruka se sada šalje sa dodatnim tipom
+                    broadcastOrder(order);
                 }
             });
+            console.log('Order completed:', orderId);
         }
     });
 });

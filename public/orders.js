@@ -317,9 +317,6 @@ function generateDailyReport() {
             XLSX.utils.book_append_sheet(workbook, worksheet, 'Dnevni Izveštaj');
 
             XLSX.writeFile(workbook, 'Dnevni_Izveštaj.xlsx');
-            
-            // Resetovanje brojača nakon generisanja izveštaja
-            fetch('/reset-daily-report', { method: 'POST' });
         })
         .catch(error => {
             console.error('Error generating daily report:', error);

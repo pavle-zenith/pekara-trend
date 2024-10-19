@@ -176,12 +176,8 @@ function addProductToPage(product) {
                 </div>
             </div>
             <div class="btn-row" style="display:flex;"> 
-
                 <button class="btn" style="margin-right: 5px;" onclick="openEditPopup(${product.id})">Izmeni</button>
-                <button class="btn delete-product" style="background-color:black; float:right;" onclick="event.stopPropagation(); deleteProduct(${product.id})">Obriši</button>
-
             </div>
-            
         `;
         productsContainer.appendChild(productDiv);
     } catch (error) {
@@ -196,6 +192,11 @@ function openEditPopup(productId) {
         currentEditProductId = product.id;
         document.getElementById('edit-product-name').value = product.name;
         document.getElementById('edit-product-price').value = product.price;
+
+        // Dodaj dugme za brisanje unutar popupa
+        const deleteButtonContainer = document.getElementById('delete-product-container');
+        deleteButtonContainer.innerHTML = `<button class="btn delete-product" style="background-color:black;" onclick="deleteProduct(${product.id})">Obriši</button>`;
+        
         document.getElementById('edit-popup').style.display = 'flex';
     }
 }

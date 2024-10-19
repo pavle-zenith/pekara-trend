@@ -19,10 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const newOrder = JSON.parse(event.data);
             addOrderToPage(newOrder);
 
-            if (newOrder) {
-                const audio = document.getElementById('new-order-sound');
-                audio.play();
-            }
+            const audio = document.getElementById('new-order-sound');
+            audio.play();
         } catch (error) {
             console.error('Error parsing WebSocket message:', error);
         }
@@ -113,8 +111,12 @@ function addOrderToPage(order) {
             <p>Broj Porudžbine: ${order.id}</p>
             <h2>Sadržaj:</h2>
             <ul>${formatOrderItems(order.items)}</ul>
-            <button style="margin-top:15px;" onclick='completeOrder(${order.id}, ${JSON.stringify(orderItemsStr)})'>Porudžbina je spremna</button>
         `;
+        orderDiv.style.cursor = 'pointer'; // Da kartica bude klikabilna
+        orderDiv.onclick = function() {
+            completeOrder(order.id, orderItemsStr);
+            orderDiv.style.backgroundColor = '#d4edda'; // Promena boje nakon obeležavanja kao spremna (opciono)
+        };
         ordersContainer.appendChild(orderDiv);
     } catch (error) {
         console.error('Error adding order to page:', error);
@@ -122,47 +124,33 @@ function addOrderToPage(order) {
 }
 
 function completeOrder(orderId, orderItems) {
-    Swal.fire({
-        title: 'Da li ste sigurni?',
-        text: "Da li želite da potvrdite ovu porudžbinu kao spremnu?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Da, potvrdite!',
-        cancelButtonText: 'Ne, otkaži'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch('/complete-order', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ orderId })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(data => {
-                console.log(data);
-                fetchNewOrders(); 
-                
-                socket.send(JSON.stringify({ orderId, orderItems }));
-                console.log("Poslat order");
-                fetchCompletedOrders(); // Osvežavanje liste završenih porudžbina
-            })
-            .catch(error => {
-                console.error('Error completing order:', error);
-                Swal.fire(
-                    'Greška!',
-                    'Došlo je do greške prilikom potvrđivanja porudžbine.',
-                    'error'
-                );
-            });
+    fetch('/complete-order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ orderId })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
+        return response.text();
+    })
+    .then(data => {
+        console.log(data);
+        fetchNewOrders(); 
+        socket.send(JSON.stringify({ orderId, orderItems }));
+        console.log("Poslat order");
+        fetchCompletedOrders(); // Osvežavanje liste završenih porudžbina
+    })
+    .catch(error => {
+        console.error('Error completing order:', error);
+        Swal.fire(
+            'Greška!',
+            'Došlo je do greške prilikom potvrđivanja porudžbine.',
+            'error'
+        );
     });
 }
 

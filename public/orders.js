@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
             addOrderToPage(newOrder);
 
             const audio = document.getElementById('new-order-sound');
-            if(document.title == "Porudžbine") {
+            if(document.title == "Proizvodi") {
                 audio.play();
             }
           //  audio.play();

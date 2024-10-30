@@ -20,9 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
             addOrderToPage(newOrder);
 
             const audio = document.getElementById('new-order-sound');
-            if(document.title == "Proizvodi") {
+            // if(document.title == "Proizvodi") {
                 audio.play();
-            }
+            // }
           //  audio.play();
         } catch (error) {
             console.error('Error parsing WebSocket message:', error);

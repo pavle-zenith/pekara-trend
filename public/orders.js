@@ -10,6 +10,16 @@ const resetReportButton = document.getElementById('reset-report'); // Dugme za r
 
 const socket = new WebSocket('ws://157.90.253.184:80');
 
+function muteAllMedia() {
+    document.querySelectorAll('audio, video').forEach(media => media.muted = true);
+}
+
+// Odmutira sve audio i video elemente na stranici
+function unmuteAllMedia() {
+    document.querySelectorAll('audio, video').forEach(media => media.muted = false);
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
     fetchNewOrders();
     fetchCompletedOrders(); // Učitavanje završenih porudžbina
@@ -142,9 +152,11 @@ function completeOrder(orderId, orderItems) {
     })
     .then(data => {
         console.log(data);
+        muteAllMedia();
         fetchNewOrders(); 
         socket.send(JSON.stringify({ orderId, orderItems }));
         console.log("Poslat order");
+        unmuteAllMedia();
         fetchCompletedOrders(); // Osvežavanje liste završenih porudžbina
     })
     .catch(error => {

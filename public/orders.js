@@ -29,15 +29,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const newOrder = JSON.parse(event.data);
             addOrderToPage(newOrder);
 
+            // Pustite zvuk samo kada stigne novi order
             const audio = document.getElementById('new-order-sound');
-            // if(document.title == "Proizvodi") {
-                audio.play();
-            // }
-          //  audio.play();
+            if (!audio.muted) {
+                audio.play().catch(error => console.error('Error playing audio:', error));
+            }
         } catch (error) {
             console.error('Error parsing WebSocket message:', error);
         }
     };
+
 
     socket.onerror = (error) => {
         console.error('WebSocket error:', error);
@@ -125,13 +126,17 @@ function addOrderToPage(order) {
             <h2>Sadržaj:</h2>
             <ul>${formatOrderItems(order.items)}</ul>
         `;
-        orderDiv.style.cursor = 'pointer'; // Da kartica bude klikabilna
+        orderDiv.style.cursor = 'pointer';
+
+        // Kada korisnik klikne na order da ga označi kao završen, mutiramo zvuk
         orderDiv.onclick = function() {
-            muteAllMedia();
+            const audio = document.getElementById('new-order-sound');
+            audio.muted = true; // Mutira zvuk privremeno
             completeOrder(order.id, orderItemsStr);
-            orderDiv.style.backgroundColor = '#d4edda'; // Promena boje nakon obeležavanja kao spremna (opciono)
-            unmuteAllMedia();
+            orderDiv.style.backgroundColor = '#d4edda';
+            setTimeout(() => audio.muted = false, 1000); // Odmutira zvuk nakon kratkog vremenskog perioda
         };
+
         ordersContainer.appendChild(orderDiv);
     } catch (error) {
         console.error('Error adding order to page:', error);

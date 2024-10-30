@@ -127,8 +127,10 @@ function addOrderToPage(order) {
         `;
         orderDiv.style.cursor = 'pointer'; // Da kartica bude klikabilna
         orderDiv.onclick = function() {
+            muteAllMedia();
             completeOrder(order.id, orderItemsStr);
             orderDiv.style.backgroundColor = '#d4edda'; // Promena boje nakon obeležavanja kao spremna (opciono)
+            unmuteAllMedia();
         };
         ordersContainer.appendChild(orderDiv);
     } catch (error) {
@@ -152,11 +154,11 @@ function completeOrder(orderId, orderItems) {
     })
     .then(data => {
         console.log(data);
-        muteAllMedia();
+        
         fetchNewOrders(); 
         socket.send(JSON.stringify({ orderId, orderItems }));
         console.log("Poslat order");
-        unmuteAllMedia();
+        
         fetchCompletedOrders(); // Osvežavanje liste završenih porudžbina
     })
     .catch(error => {
